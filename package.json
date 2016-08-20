@@ -1,0 +1,15 @@
+{
+  "name": "hive-processor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "processor.js",
+  "scripts": {
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "msgpack-lite": "^0.1.20",
+    "nanomsg": "^3.2.1"
+  }
+}
