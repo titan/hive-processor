@@ -42,6 +42,9 @@ export class Processor {
       idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
     };
     this.pool = new Pool(dbconfig);
+    this.pool.on('error', function (err, client) {
+      console.error('idle client error', err.message, err.stack)
+    })
   }
 
   public call(cmd: string, impl: ModuleFunction): void {
