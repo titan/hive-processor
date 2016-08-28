@@ -2,6 +2,7 @@
 const msgpack = require('msgpack-lite');
 const nanomsg = require('nanomsg');
 const Pool = require('pg-pool');
+const ip = require('ip');
 const redis_1 = require('redis');
 class Processor {
     constructor(config) {
@@ -19,6 +20,9 @@ class Processor {
             idleTimeoutMillis: 30000,
         };
         this.pool = new Pool(dbconfig);
+        this.pool.on('error', function (err, client) {
+            console.error('idle client error', err.message, err.stack);
+        });
     }
     call(cmd, impl) {
         this.functions.set(cmd, impl);
@@ -46,3 +50,25 @@ class Processor {
     }
 }
 exports.Processor = Processor;
+function rpc(domain, addr, uid, fun, ...args) {
+    let p = new Promise(function (resolve, reject) {
+        let params = {
+            ctx: {
+                domain: domain,
+                ip: ip.address(),
+                uid: uid
+            },
+            fun: fun,
+            args: [...args]
+        };
+        let req = nanomsg.socket('req');
+        req.connect(addr);
+        req.on('data', (msg) => {
+            resolve(msgpack.decode(msg));
+            req.shutdown(addr);
+        });
+        req.send(msgpack.encode(params));
+    });
+    return p;
+}
+exports.rpc = rpc;

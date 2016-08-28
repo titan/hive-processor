@@ -1,6 +1,7 @@
 import * as msgpack from 'msgpack-lite';
 import * as nanomsg from 'nanomsg';
 import * as Pool from 'pg-pool';
+import * as ip from 'ip';
 import { Client as PGClient } from 'pg';
 import { createClient, RedisClient} from 'redis';
 
@@ -71,4 +72,27 @@ export class Processor {
       }
     });
   }
+}
+
+export function rpc(domain: string, addr: string, uid: string, fun: string, ...args: any[]): Promise<any> {
+  let p = new Promise(function (resolve, reject) {
+    let params = {
+      ctx: {
+        domain: domain,
+        ip:     ip.address(),
+        uid:    uid
+      },
+      fun: fun,
+      args: [...args]
+    };
+    let req = nanomsg.socket('req');
+    req.connect(addr);
+
+    req.on('data', (msg) => {
+      resolve(msgpack.decode(msg));
+      req.shutdown(addr);
+    });
+    req.send(msgpack.encode(params));
+  });
+  return p;
 }

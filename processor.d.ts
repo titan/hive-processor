@@ -24,3 +24,4 @@ export declare class Processor {
     call(cmd: string, impl: ModuleFunction): void;
     run(): void;
 }
+export declare function rpc(domain: string, addr: string, uid: string, fun: string, ...args: any[]): Promise<any>;
