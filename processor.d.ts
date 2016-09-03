@@ -4,6 +4,7 @@ import { RedisClient } from 'redis';
 export interface Config {
     dbhost: string;
     dbuser: string;
+    dbport?: number;
     database: string;
     dbpasswd: string;
     cachehost: string;

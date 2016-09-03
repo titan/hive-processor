@@ -14,7 +14,7 @@ class Processor {
             user: config.dbuser,
             database: config.database,
             password: config.dbpasswd,
-            port: 5432,
+            port: config.dbport ? config.dbport : 5432,
             min: 1,
             max: 2,
             idleTimeoutMillis: 30000,
@@ -34,9 +34,9 @@ class Processor {
         pull.on('data', (buf) => {
             let pkt = msgpack.decode(buf);
             if (_self.functions.has(pkt.cmd)) {
-                let func = _self.functions.get(pkt.cmd);
                 _self.pool.connect().then(db => {
                     let cache = redis_1.createClient(6379, _self.cachehost);
+                    let func = _self.functions.get(pkt.cmd);
                     func(db, cache, () => {
                         cache.quit();
                         db.end();
@@ -52,6 +52,10 @@ class Processor {
 exports.Processor = Processor;
 function rpc(domain, addr, uid, fun, ...args) {
     let p = new Promise(function (resolve, reject) {
+        let a = [];
+        if (args != null) {
+            a = [...args];
+        }
         let params = {
             ctx: {
                 domain: domain,
@@ -59,7 +63,7 @@ function rpc(domain, addr, uid, fun, ...args) {
                 uid: uid
             },
             fun: fun,
-            args: [...args]
+            args: a
         };
         let req = nanomsg.socket('req');
         req.connect(addr);

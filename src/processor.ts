@@ -8,6 +8,7 @@ import { createClient, RedisClient} from 'redis';
 export interface Config {
   dbhost: string,
   dbuser: string,
+  dbport?: number,
   database: string,
   dbpasswd: string,
   cachehost: string, 
@@ -37,7 +38,7 @@ export class Processor {
       user: config.dbuser,
       database: config.database,
       password: config.dbpasswd,
-      port: 5432,
+      port: config.dbport? config.dbport: 5432,
       min: 1, // min number of clients in the pool
       max: 2, // max number of clients in the pool
       idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
@@ -59,9 +60,9 @@ export class Processor {
     pull.on('data', (buf: NodeBuffer) => {
       let pkt = msgpack.decode(buf);
       if (_self.functions.has(pkt.cmd)) {
-        let func = _self.functions.get(pkt.cmd);
         _self.pool.connect().then(db => {
           let cache = createClient(6379, _self.cachehost);
+          let func = _self.functions.get(pkt.cmd);
           func(db, cache, () => {
             cache.quit();
             db.end();
@@ -76,6 +77,10 @@ export class Processor {
 
 export function rpc(domain: string, addr: string, uid: string, fun: string, ...args: any[]): Promise<any> {
   let p = new Promise(function (resolve, reject) {
+    let a = [];
+    if (args != null) {
+      a = [...args];
+    }
     let params = {
       ctx: {
         domain: domain,
@@ -83,7 +88,7 @@ export function rpc(domain: string, addr: string, uid: string, fun: string, ...a
         uid:    uid
       },
       fun: fun,
-      args: [...args]
+      args: a
     };
     let req = nanomsg.socket('req');
     req.connect(addr);
