@@ -1,5 +1,4 @@
-import * as Pool from 'pg-pool';
-import { Client as PGClient } from 'pg';
+import { Pool, Client as PGClient } from 'pg';
 import { RedisClient } from 'redis';
 export interface Config {
     dbhost: string;

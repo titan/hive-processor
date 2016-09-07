@@ -1,8 +1,8 @@
 "use strict";
 const msgpack = require('msgpack-lite');
 const nanomsg = require('nanomsg');
-const Pool = require('pg-pool');
 const ip = require('ip');
+const pg_1 = require('pg');
 const redis_1 = require('redis');
 class Processor {
     constructor(config) {
@@ -19,7 +19,7 @@ class Processor {
             max: 2,
             idleTimeoutMillis: 30000,
         };
-        this.pool = new Pool(dbconfig);
+        this.pool = new pg_1.Pool(dbconfig);
         this.pool.on('error', function (err, client) {
             console.error('idle client error', err.message, err.stack);
         });
@@ -39,7 +39,7 @@ class Processor {
                     let func = _self.functions.get(pkt.cmd);
                     func(db, cache, () => {
                         cache.quit();
-                        db.end();
+                        db.release();
                     }, pkt.args);
                 });
             }

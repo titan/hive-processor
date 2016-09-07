@@ -1,8 +1,7 @@
 import * as msgpack from 'msgpack-lite';
 import * as nanomsg from 'nanomsg';
-import * as Pool from 'pg-pool';
 import * as ip from 'ip';
-import { Client as PGClient } from 'pg';
+import { Pool, Client as PGClient } from 'pg';
 import { createClient, RedisClient} from 'redis';
 
 export interface Config {
@@ -65,7 +64,7 @@ export class Processor {
           let func = _self.functions.get(pkt.cmd);
           func(db, cache, () => {
             cache.quit();
-            db.end();
+            db.release();
           }, pkt.args);
         });
       } else {
