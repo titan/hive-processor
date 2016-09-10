@@ -66,6 +66,8 @@ export class Processor {
             cache.quit();
             db.release();
           }, pkt.args);
+        }).catch(e => {
+          console.log("DB connection error" + e.stack);
         });
       } else {
         console.error(pkt.cmd + " not found!");
