@@ -25,3 +25,5 @@ export declare class Processor {
     run(): void;
 }
 export declare function rpc<T>(domain: string, addr: string, uid: string, fun: string, ...args: any[]): Promise<T>;
+export declare function async_serial<T>(ps: Promise<T>[], acc: T[], scb: (vals: T[]) => void, fcb: (e: Error) => void): void;
+export declare function async_serial_ignore<T>(ps: Promise<T>[], acc: T[], cb: (vals: T[]) => void): void;

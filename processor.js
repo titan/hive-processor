@@ -78,3 +78,33 @@ function rpc(domain, addr, uid, fun, ...args) {
     return p;
 }
 exports.rpc = rpc;
+function async_serial(ps, acc, scb, fcb) {
+    if (ps.length === 0) {
+        scb(acc);
+    }
+    else {
+        let p = ps.shift();
+        p.then(val => {
+            acc.push(val);
+            async_serial(ps, acc, scb, fcb);
+        }).catch((e) => {
+            fcb(e);
+        });
+    }
+}
+exports.async_serial = async_serial;
+function async_serial_ignore(ps, acc, cb) {
+    if (ps.length === 0) {
+        cb(acc);
+    }
+    else {
+        let p = ps.shift();
+        p.then(val => {
+            acc.push(val);
+            async_serial_ignore(ps, acc, cb);
+        }).catch((e) => {
+            async_serial_ignore(ps, acc, cb);
+        });
+    }
+}
+exports.async_serial_ignore = async_serial_ignore;
