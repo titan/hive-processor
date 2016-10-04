@@ -40,7 +40,7 @@ class Processor {
                     func(db, cache, () => {
                         cache.quit();
                         db.release();
-                    }, pkt.args);
+                    }, ...pkt.args);
                 }).catch(e => {
                     console.log("DB connection error" + e.stack);
                 });
