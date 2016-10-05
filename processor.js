@@ -37,10 +37,18 @@ class Processor {
                 _self.pool.connect().then(db => {
                     let cache = redis_1.createClient(6379, _self.cachehost);
                     let func = _self.functions.get(pkt.cmd);
-                    func(db, cache, () => {
-                        cache.quit();
-                        db.release();
-                    }, ...pkt.args);
+                    if (pkt.args) {
+                        func(db, cache, () => {
+                            cache.quit();
+                            db.release();
+                        }, ...pkt.args);
+                    }
+                    else {
+                        func(db, cache, () => {
+                            cache.quit();
+                            db.release();
+                        });
+                    }
                 }).catch(e => {
                     console.log("DB connection error" + e.stack);
                 });
