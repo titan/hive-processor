@@ -11,6 +11,7 @@ export interface Config {
   database: string,
   dbpasswd: string,
   cachehost: string,
+  cacheport?: number,
   addr: string
 }
 
@@ -27,11 +28,13 @@ export class Processor {
   addr: string;
   pool: Pool;
   cachehost: string;
+  cacheport: number;
 
   constructor(config: Config) {
     this.addr = config.addr;
     this.functions = new Map<string, ModuleFunction>();
     this.cachehost = config.cachehost;
+    this.cacheport = config.cacheport ? config.cacheport : (process.env["CACHE_PORT"] ? parseInt(process.env["CACHE_PORT"]) : 6379);
     let dbconfig = {
       host: config.dbhost,
       user: config.dbuser,
@@ -44,8 +47,8 @@ export class Processor {
     };
     this.pool = new Pool(dbconfig);
     this.pool.on('error', function (err, client) {
-      console.error('idle client error', err.message, err.stack)
-    })
+      console.error('idle client error', err.message, err.stack);
+    });
   }
 
   public call(cmd: string, impl: ModuleFunction): void {
@@ -60,7 +63,7 @@ export class Processor {
       let pkt = msgpack.decode(buf);
       if (_self.functions.has(pkt.cmd)) {
         _self.pool.connect().then(db => {
-          let cache = createClient(6379, _self.cachehost);
+          let cache = createClient(this.cacheport, _self.cachehost);
           let func = _self.functions.get(pkt.cmd);
           if (pkt.args) {
             func(db, cache, () => {

@@ -7,6 +7,7 @@ export interface Config {
     database: string;
     dbpasswd: string;
     cachehost: string;
+    cacheport?: number;
     addr: string;
 }
 export interface DoneFunction {
@@ -20,6 +21,7 @@ export declare class Processor {
     addr: string;
     pool: Pool;
     cachehost: string;
+    cacheport: number;
     constructor(config: Config);
     call(cmd: string, impl: ModuleFunction): void;
     run(): void;

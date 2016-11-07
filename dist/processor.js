@@ -9,6 +9,7 @@ class Processor {
         this.addr = config.addr;
         this.functions = new Map();
         this.cachehost = config.cachehost;
+        this.cacheport = config.cacheport ? config.cacheport : (process.env["CACHE_PORT"] ? parseInt(process.env["CACHE_PORT"]) : 6379);
         let dbconfig = {
             host: config.dbhost,
             user: config.dbuser,
@@ -35,7 +36,7 @@ class Processor {
             let pkt = msgpack.decode(buf);
             if (_self.functions.has(pkt.cmd)) {
                 _self.pool.connect().then(db => {
-                    let cache = redis_1.createClient(6379, _self.cachehost);
+                    let cache = redis_1.createClient(this.cacheport, _self.cachehost);
                     let func = _self.functions.get(pkt.cmd);
                     if (pkt.args) {
                         func(db, cache, () => {
