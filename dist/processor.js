@@ -1,5 +1,6 @@
 "use strict";
 const msgpack = require('msgpack-lite');
+const crypto = require("crypto");
 const nanomsg = require('nanomsg');
 const ip = require('ip');
 const pg_1 = require('pg');
@@ -76,13 +77,20 @@ function rpc(domain, addr, uid, fun, ...args) {
             fun: fun,
             args: a
         };
+        const sn = crypto.randomBytes(64).toString("base64");
         let req = nanomsg.socket('req');
         req.connect(addr);
         req.on('data', (msg) => {
-            resolve(msgpack.decode(msg));
+            const data = msgpack.decode(msg);
+            if (sn === data["sn"]) {
+                resolve(msgpack.decode(data["payload"]));
+            }
+            else {
+                reject(new Error("Invalid calling sequence number"));
+            }
             req.shutdown(addr);
         });
-        req.send(msgpack.encode(params));
+        req.send(msgpack.encode({ sn, pkt: params }));
     });
     return p;
 }

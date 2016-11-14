@@ -1,4 +1,5 @@
 import * as msgpack from 'msgpack-lite';
+import * as crypto from "crypto";
 import * as nanomsg from 'nanomsg';
 import * as ip from 'ip';
 import { Pool, Client as PGClient } from 'pg';
@@ -101,14 +102,20 @@ export function rpc<T>(domain: string, addr: string, uid: string, fun: string, .
       fun: fun,
       args: a
     };
+
+    const sn = crypto.randomBytes(64).toString("base64");
     let req = nanomsg.socket('req');
     req.connect(addr);
-
     req.on('data', (msg) => {
-      resolve(msgpack.decode(msg));
+      const data: Object = msgpack.decode(msg);
+      if (sn === data["sn"]) {
+        resolve(msgpack.decode(data["payload"]));
+      } else {
+        reject(new Error("Invalid calling sequence number"));
+      }
       req.shutdown(addr);
     });
-    req.send(msgpack.encode(params));
+    req.send(msgpack.encode({ sn, pkt: params}));
   });
   return p;
 }
