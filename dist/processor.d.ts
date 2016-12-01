@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Pool, Client as PGClient } from 'pg';
 import { RedisClient } from 'redis';
 export interface Config {

@@ -2,6 +2,7 @@ import * as msgpack from 'msgpack-lite';
 import * as crypto from "crypto";
 import * as nanomsg from 'nanomsg';
 import * as ip from 'ip';
+import * as bluebird from "bluebird";
 import { Pool, Client as PGClient } from 'pg';
 import { createClient, RedisClient} from 'redis';
 
@@ -64,7 +65,7 @@ export class Processor {
       let pkt = msgpack.decode(buf);
       if (_self.functions.has(pkt.cmd)) {
         _self.pool.connect().then(db => {
-          let cache = createClient(this.cacheport, _self.cachehost);
+          let cache = bluebird.promisifyAll(createClient(this.cacheport, _self.cachehost)) as RedisClient;
           let func = _self.functions.get(pkt.cmd);
           if (pkt.args) {
             func(db, cache, () => {
