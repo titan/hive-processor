@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const nanomsg = require('nanomsg');
 const ip = require('ip');
 const bluebird = require("bluebird");
+const zlib = require("zlib");
 const pg_1 = require('pg');
 const redis_1 = require('redis');
 class Processor {
@@ -84,7 +85,19 @@ function rpc(domain, addr, uid, fun, ...args) {
         req.on('data', (msg) => {
             const data = msgpack.decode(msg);
             if (sn === data["sn"]) {
-                resolve(msgpack.decode(data["payload"]));
+                if (data["payload"][0] === 0x78 && data["payload"][1] === 0x9c) {
+                    zlib.inflate(data["payload"], (e, newbuf) => {
+                        if (e) {
+                            reject(e);
+                        }
+                        else {
+                            resolve(msgpack.decode(newbuf));
+                        }
+                    });
+                }
+                else {
+                    resolve(msgpack.decode(data["payload"]));
+                }
             }
             else {
                 reject(new Error("Invalid calling sequence number"));
