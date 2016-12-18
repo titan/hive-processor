@@ -66,7 +66,7 @@ export class Processor {
       let pkt = msgpack.decode(buf);
       if (_self.functions.has(pkt.cmd)) {
         _self.pool.connect().then(db => {
-          let cache = bluebird.promisifyAll(createClient(this.cacheport, _self.cachehost)) as RedisClient;
+          let cache = bluebird.promisifyAll(createClient(this.cacheport, _self.cachehost, {"return_buffers": true})) as RedisClient;
           let func = _self.functions.get(pkt.cmd);
           if (pkt.args) {
             func(db, cache, () => {

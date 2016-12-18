@@ -1,12 +1,12 @@
 "use strict";
-const msgpack = require('msgpack-lite');
+const msgpack = require("msgpack-lite");
 const crypto = require("crypto");
-const nanomsg = require('nanomsg');
-const ip = require('ip');
+const nanomsg = require("nanomsg");
+const ip = require("ip");
 const bluebird = require("bluebird");
 const zlib = require("zlib");
-const pg_1 = require('pg');
-const redis_1 = require('redis');
+const pg_1 = require("pg");
+const redis_1 = require("redis");
 class Processor {
     constructor(config) {
         this.addr = config.addr;
@@ -39,7 +39,7 @@ class Processor {
             let pkt = msgpack.decode(buf);
             if (_self.functions.has(pkt.cmd)) {
                 _self.pool.connect().then(db => {
-                    let cache = bluebird.promisifyAll(redis_1.createClient(this.cacheport, _self.cachehost));
+                    let cache = bluebird.promisifyAll(redis_1.createClient(this.cacheport, _self.cachehost, { "return_buffers": true }));
                     let func = _self.functions.get(pkt.cmd);
                     if (pkt.args) {
                         func(db, cache, () => {
